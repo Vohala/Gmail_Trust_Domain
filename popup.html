@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <title>Trusted Organization Login</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            width: 300px;
+            margin: 0;
+            padding: 15px;
+            background-color: #f0f2f5;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #888;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+            .close-btn:hover {
+                color: #ff4444;
+            }
+
+        h2 {
+            color: #1a73e8;
+            margin: 0 0 15px;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .logo {
+            display: block;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+        }
+
+        p {
+            font-size: 13px;
+            color: #555;
+            margin: 0 0 10px;
+            text-align: center;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+            button:hover {
+                background-color: #1557b0;
+            }
+
+        .alert {
+            color: #d93025;
+            font-weight: 500;
+            font-size: 12px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 16px;
+            color: #333;
+            margin: 15px 0 10px;
+            text-align: left;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 6px;
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            color: #333;
+        }
+
+            li:last-child {
+                border-bottom: none;
+            }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+            .remove-btn:hover {
+                color: #ff4444;
+                transform: scale(1.2);
+            }
+
+            .remove-btn i {
+                pointer-events: none;
+            }
+
+        .password-prompt {
+            display: none;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .password-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+            .password-button:hover {
+                background-color: #1557b0;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="close-btn" id="close-popup" title="Close"><i class="fas fa-times"></i></button>
+        <img class="logo" src="icon.png" alt="Organization Logo">
+        <h2>Trusted Organization Login</h2>
+        <p>Enter a domain (e.g., example.com) or email (e.g., user@example.com):</p>
+        <input type="text" id="domain-input" placeholder="e.g., example.com or user@example.com">
+        <button id="add-domain">Add</button>
+
+        <h3>Allowed Domains/Emails</h3>
+        <ul id="domain-list"></ul>
+
+        <p class="alert">Unauthorized email logins are blocked!</p>
+        <p class="info-text">Only users with a valid email or domain can access Gmail.</p>
+
+        <div class="password-prompt" id="password-prompt">
+            <input type="password" id="password-input" class="password-input" placeholder="Enter password">
+            <button class="password-button" id="submit-password">Submit</button>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
