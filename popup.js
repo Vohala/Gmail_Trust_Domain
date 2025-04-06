@@ -2,177 +2,198 @@ document.addEventListener("DOMContentLoaded", function () {
     const domainInput = document.getElementById("domain-input");
     const addButton = document.getElementById("add-domain");
     const domainList = document.getElementById("domain-list");
+    const saveButton = document.getElementById("saveButton");
     const passwordPrompt = document.getElementById('password-prompt');
     const passwordInput = document.getElementById('password-input');
     const submitPasswordButton = document.getElementById('submit-password');
-
-    const password = 'admin123'; // Predefined password
-
-    
-
-    // Load Trusted Entries from Storage
+  
+    const password = 'admin123'; // Predefined password for adding/removing domains
+  
+    // 🚀 Load Trusted Domains from Storage
     function loadDomains() {
-        chrome.storage.sync.get("trustedEntries", function (data) {
-            const entries = data.trustedEntries || [];
+        chrome.storage.sync.get("trustedDomains", function (data) {
+            const domains = data.trustedDomains || [];
             domainList.innerHTML = ""; // Clear existing list
-
-            entries.forEach((entry, index) => {
+  
+            domains.forEach((domain, index) => {
                 const li = document.createElement("li");
                 li.innerHTML = `
-                    <span>${entry}</span>
+                    <span>${domain}</span>
                     <button class="remove-btn" data-index="${index}" title="Remove">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 `;
                 domainList.appendChild(li);
             });
-
+  
             attachRemoveListeners();
-            checkAndLogout();
+            checkAndLogout();  // Check if the current user should be logged out
         });
     }
-
-    // Attach event listeners to remove buttons
+  
+    // 🚀 Attach event listeners to remove buttons
     function attachRemoveListeners() {
         document.querySelectorAll(".remove-btn").forEach(button => {
             button.addEventListener("click", function () {
                 const index = parseInt(this.getAttribute("data-index"));
-                passwordPrompt.style.display = 'block';
+                passwordPrompt.style.display = 'block'; // Show password prompt for removal
                 submitPasswordButton.onclick = function () {
                     const enteredPassword = passwordInput.value.trim();
                     if (enteredPassword === password) {
-                        removeEntry(index);
-                        passwordPrompt.style.display = 'none';
-                        passwordInput.value = '';
+                        removeDomain(index); // Proceed to remove the domain if correct password is entered
+                        passwordPrompt.style.display = 'none'; // Hide the password prompt
+                        passwordInput.value = ''; // Clear password input
                     } else {
                         alert('Incorrect password!');
-                        passwordInput.value = '';
+                        passwordInput.value = ''; // Clear password input
                     }
                 };
             });
         });
     }
-
-    // Add a new entry (domain or email)
+  
+    // 🚀 Add a new domain
     addButton.addEventListener("click", function () {
-        const newEntry = domainInput.value.trim().toLowerCase();
-        if (!validateEntry(newEntry)) return;
-
-        passwordPrompt.style.display = 'block';
+        const newDomain = domainInput.value.trim().toLowerCase();
+        if (!validateDomain(newDomain)) return;
+  
+        passwordPrompt.style.display = 'block'; // Show password prompt for adding domain
         submitPasswordButton.onclick = function () {
             const enteredPassword = passwordInput.value.trim();
             if (enteredPassword === password) {
-                chrome.storage.sync.get("trustedEntries", function (data) {
-                    let entries = data.trustedEntries || [];
-                    if (!entries.includes(newEntry)) {
-                        entries.push(newEntry);
-                        chrome.storage.sync.set({ trustedEntries: entries }, function () {
-                            domainInput.value = "";
-                            loadDomains();
+                chrome.storage.sync.get("trustedDomains", function (data) {
+                    let domains = data.trustedDomains || [];
+                    if (!domains.includes(newDomain)) {
+                        domains.push(newDomain);
+                        chrome.storage.sync.set({ trustedDomains: domains }, function () {
+                            domainInput.value = ""; // Clear domain input
+                            loadDomains(); // Reload domain list and refresh the tab
                         });
                     } else {
-                        alert("⚠️ This entry is already in the list.");
+                        alert("⚠️ This domain is already in the list.");
                     }
                 });
-                passwordPrompt.style.display = 'none';
-                passwordInput.value = '';
+                passwordPrompt.style.display = 'none'; // Hide the password prompt
+                passwordInput.value = ''; // Clear password input
             } else {
                 alert('Incorrect password!');
-                passwordInput.value = '';
+                passwordInput.value = ''; // Clear password input
             }
         };
     });
-
-    // Validate Entry (domain or email)
-    function validateEntry(entry) {
-        if (!entry) {
-            alert("⚠️ Please enter a valid domain or email.");
+  
+    // 🚀 Save multiple domains (comma-separated input)
+    if (saveButton) {
+        saveButton.addEventListener("click", function () {
+            const input = domainInput.value.trim();
+            const newDomains = input.split(',').map(domain => domain.trim().toLowerCase()).filter(domain => validateDomain(domain));
+  
+            if (newDomains.length === 0) {
+                alert("⚠️ Please enter valid domain(s).");
+                return;
+            }
+  
+            // ✅ Merge new domains without replacing old ones
+            chrome.storage.sync.get("trustedDomains", function (data) {
+                let existingDomains = data.trustedDomains || [];
+                newDomains.forEach(domain => {
+                    if (!existingDomains.includes(domain)) {
+                        existingDomains.push(domain);
+                    }
+                });
+  
+                chrome.storage.sync.set({ trustedDomains: existingDomains }, function () {
+                    alert("✅ Trusted domains updated!");
+                    loadDomains(); // Reload domain list and refresh the tab
+                });
+            });
+        });
+    }
+  
+    // 🚀 Validate Domain Input
+    function validateDomain(domain) {
+        if (!domain) {
+            alert("⚠️ Please enter a valid domain.");
             return false;
         }
-        // Email format: user@domain.com
-        if (entry.includes('@')) {
-            if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(entry)) {
-                alert("⚠️ Invalid email format! Example: user@example.com");
-                return false;
-            }
-        }
-        // Domain format: domain.com
-        else if (!/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(entry)) {
-            alert("⚠️ Invalid domain format! Example: example.com");
+        if (!/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domain)) {
+            alert("⚠️ Invalid domain format! Example: gmail.com");
             return false;
         }
         return true;
     }
-
-    // Remove an entry by index
-    function removeEntry(index) {
-        chrome.storage.sync.get("trustedEntries", function (data) {
-            let entries = data.trustedEntries || [];
-            if (index >= 0 && index < entries.length) {
-                entries.splice(index, 1);
-                chrome.storage.sync.set({ trustedEntries: entries }, function () {
-                    loadDomains();
-                    checkAndLogout();
+  
+    // 🚀 Remove a domain by index
+    function removeDomain(index) {
+        chrome.storage.sync.get("trustedDomains", function (data) {
+            let domains = data.trustedDomains || [];
+            if (index >= 0 && index < domains.length) {
+                domains.splice(index, 1); // Remove domain by index
+                chrome.storage.sync.set({ trustedDomains: domains }, function () {
+                    loadDomains(); // Reload domain list
+                    checkAndLogout();  // Check if the current user should be logged out
                 });
             }
         });
     }
+  
+    // 🚀 Check if user needs to be logged out
+    // 🚀 Check if user needs to be logged out
+function checkAndLogout() {
+    chrome.storage.sync.get("trustedDomains", function (data) {
+        const trustedDomains = data.trustedDomains || [];
 
-    // Check if user needs to be logged out
-    function checkAndLogout() {
-        chrome.storage.sync.get("trustedEntries", function (data) {
-            const trustedEntries = data.trustedEntries || [];
-            if (trustedEntries.length === 0) {
+        // If there are no trusted domains, log the user out immediately
+        if (trustedDomains.length === 0) {
+            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                if (tabs[0]) {
+                    chrome.tabs.update(tabs[0].id, { url: "https://accounts.google.com/Logout" });
+                }
+            });
+            return;
+        }
+
+        // Get the currently logged-in user email domain
+        chrome.identity.getProfileUserInfo(function(userInfo) {
+            const userEmail = userInfo.email;
+            const userDomain = userEmail.split('@')[1];
+
+            // If the user domain is not in the trusted domains list, log the user out
+            if (!trustedDomains.includes(userDomain)) {
                 chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                     if (tabs[0]) {
                         chrome.tabs.update(tabs[0].id, { url: "https://accounts.google.com/Logout" });
                     }
                 });
-                return;
             }
-
-            chrome.identity.getProfileUserInfo(function (userInfo) {
-                const userEmail = userInfo.email;
-                const userDomain = userEmail.split('@')[1];
-                const isAllowed = trustedEntries.includes(userEmail) || trustedEntries.includes(userDomain);
-                if (!isAllowed) {
-                    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                        if (tabs[0]) {
-                            chrome.tabs.update(tabs[0].id, { url: "https://accounts.google.com/Logout" });
-                        }
-                    });
-                }
-            });
         });
-    }
+    });
+}
 
-    // Storage change listener
+    // 🚀 Listen for storage updates (auto enforcement)
     chrome.storage.onChanged.addListener(function (changes, areaName) {
-        if (areaName === "sync" && changes.trustedEntries) {
-            loadDomains();
+        if (areaName === "sync" && changes.trustedDomains) {
+            loadDomains(); // Refresh the domain list and check for logout
         }
     });
-
-    document.getElementById("close-popup").addEventListener("click", function () {
-        window.close(); // Closes the popup window
-    });
-
-    // Initial Load
+  
+    // 🚀 Initial Load
     loadDomains();
 
-    // Refresh tab on change
+    // 🚀 Refresh the current tab after domain is added/removed
     function refreshCurrentTab() {
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
             if (tabs[0]) {
-                chrome.tabs.reload(tabs[0].id);
+                chrome.tabs.reload(tabs[0].id); // Reload the current tab
             }
         });
     }
 
-    chrome.tabs.onActivated.addListener(function (activeInfo) {
+    // 🚀 Listen for tab switch and refresh the focused tab
+    chrome.tabs.onActivated.addListener(function(activeInfo) {
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
             if (tabs[0]) {
-                chrome.tabs.reload(tabs[0].id);
+                chrome.tabs.reload(tabs[0].id); // Reload the newly activated tab
             }
         });
     });
